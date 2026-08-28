@@ -117,7 +117,6 @@
   }
   .attempts .n{ color:var(--ember-bright); font-weight:700; }
 
-  /* ===== constellation key strip ===== */
   .const-key{
     display:flex;
     gap:10px;
@@ -211,14 +210,54 @@
     color:rgba(237,225,196,0.75);
     text-transform:uppercase;
     white-space:nowrap;
+    transition:color 0.3s ease;
   }
   .fixed-star.middle .label{ color:var(--brass-bright); }
 
-  .dial{
+  /* resonance glow when the needle swings near a star */
+  .fixed-star.resonate .dot{
+    animation:resonatePulse 0.9s ease-in-out infinite;
+  }
+  .fixed-star.resonate .label{ color:#fff; }
+  @keyframes resonatePulse{
+    0%,100%{ transform:scale(1); box-shadow:0 0 10px 2px rgba(245,239,217,0.55); }
+    50%{ transform:scale(1.5); box-shadow:0 0 22px 8px rgba(245,239,217,0.95); }
+  }
+
+  /* alignment beam from hub to the star the needle is pointing at */
+  .beam-svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:1;
+  }
+  .beam-line{
+    stroke:var(--brass-bright);
+    stroke-width:1.5;
+    opacity:0;
+    transition:opacity 0.3s ease;
+    filter:drop-shadow(0 0 4px rgba(232,201,128,0.8));
+  }
+  .beam-line.show{ opacity:0.85; }
+
+  .cardinal{
+    position:absolute;
+    font-family:'Cinzel', serif;
+    font-size:10px;
+    letter-spacing:0.15em;
+    color:rgba(201,164,100,0.55);
+  }
+  .cardinal.n{ top:-2%; left:50%; transform:translateX(-50%); }
+  .cardinal.e{ top:50%; right:-2%; transform:translateY(-50%); }
+  .cardinal.s{ bottom:-2%; left:50%; transform:translateX(-50%); }
+  .cardinal.w{ top:50%; left:-2%; transform:translateY(-50%); }
+
+  .dial-base{
     position:absolute;
     inset:8%;
     border-radius:50%;
-    cursor:grab;
     background:
       radial-gradient(circle at 35% 30%, #3a2c17 0%, #241a0d 45%, #150f08 100%);
     box-shadow:
@@ -226,16 +265,42 @@
       0 8px 24px rgba(0,0,0,0.55),
       inset 0 0 20px rgba(0,0,0,0.6);
     transition: box-shadow 0.4s ease;
+    z-index:1;
   }
-  .dial:active{ cursor:grabbing; }
 
-  .dial.locked-correct{
+  /* pointer group: only this rotates. The dial-face beneath it (ticks,
+     degree numbers) stays fixed in place, like a real compass card. */
+  .pointer{
+    position:absolute;
+    inset:8%;
+    border-radius:50%;
+    cursor:grab;
+    z-index:3;
+    transform-origin:50% 50%;
+    transition: transform 0.35s cubic-bezier(.22,.9,.35,1);
+  }
+  .pointer.dragging{ transition:none; }
+  .pointer:active{ cursor:grabbing; }
+
+  /* slow rotating sheen across the brass face for a "living metal" feel */
+  .dial-face::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:conic-gradient(from 0deg, transparent 0deg, rgba(232,201,128,0.10) 8deg, transparent 20deg, transparent 360deg);
+    animation:sheenSpin 7s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes sheenSpin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+
+  .dial-base.locked-correct{
     box-shadow:
       0 0 0 3px var(--brass-bright),
       0 0 50px 12px rgba(232,201,128,0.75),
       inset 0 0 30px rgba(232,201,128,0.3);
   }
-  .dial.locked-wrong{
+  .dial-base.locked-wrong{
     box-shadow:
       0 0 0 3px var(--ember-bright),
       0 0 40px 8px rgba(224,107,63,0.6),
@@ -333,6 +398,57 @@
     color:#8b8474;
     margin-bottom:16px;
   }
+
+  /* precise numeric entry, for setting the exact bearing */
+  .precise-set{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .precise-set input[type="number"]{
+    width:90px;
+    padding:10px 12px;
+    background:rgba(201,164,100,0.08);
+    border:1px solid rgba(201,164,100,0.45);
+    border-radius:3px;
+    color:var(--brass-bright);
+    font-family:'Cinzel', serif;
+    font-size:16px;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .precise-set input[type="number"]:focus{
+    outline:none;
+    border-color:var(--brass-bright);
+    box-shadow:0 0 0 2px rgba(232,201,128,0.25);
+  }
+  .precise-set input[type="number"]::-webkit-outer-spin-button,
+  .precise-set input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .precise-set label{
+    font-family:'Cinzel', serif;
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:#8b8474;
+  }
+  .set-btn{
+    background:transparent;
+    border:1px solid rgba(201,164,100,0.5);
+    color:var(--brass);
+    font-family:'Cinzel', serif;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    padding:9px 16px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .set-btn:hover{ background:rgba(201,164,100,0.14); border-color:var(--brass-bright); }
 
   .controls{
     display:flex;
@@ -438,7 +554,6 @@
     margin-bottom:6px;
   }
 
-  /* constellation detail popup (from key chips) */
   .const-popup{
     position:fixed;
     inset:0;
@@ -633,10 +748,17 @@
           <div class="dot"></div><div class="label">Scorpius</div>
         </div>
         <div class="true-north">N</div>
+        <div class="cardinal n">N</div>
+        <div class="cardinal e">E</div>
+        <div class="cardinal s">S</div>
+        <div class="cardinal w">W</div>
+        <svg class="beam-svg" id="beamSvg"><line class="beam-line" id="beamLine" x1="50%" y1="50%" x2="50%" y2="50%"/></svg>
       </div>
 
-      <div class="dial" id="dial">
+      <div class="dial-base" id="dialBase">
         <div class="dial-face" id="dialFace"></div>
+      </div>
+      <div class="pointer" id="pointer">
         <div class="needle" id="needle"></div>
         <div class="hub"></div>
       </div>
@@ -647,13 +769,19 @@
     </div>
     <div class="field-label">bearing from true north</div>
 
+    <div class="precise-set">
+      <label for="preciseInput">Set exact bearing</label>
+      <input type="number" id="preciseInput" min="0" max="359" step="1" placeholder="000">
+      <button class="set-btn" id="setBtn">Set</button>
+    </div>
+
     <div class="controls">
       <button class="nudge" id="nudgeMinus" title="Turn -1°">−</button>
       <button class="reveal-btn" id="revealBtn">Reveal</button>
       <button class="nudge" id="nudgePlus" title="Turn +1°">+</button>
     </div>
 
-    <div class="status" id="statusText">Drag the stone, or nudge with ± , then commit.</div>
+    <div class="status" id="statusText">Drag the stone, type an exact bearing, or nudge with ± — then commit.</div>
 
     <button class="hint-btn" id="hintBtn">Need a hint?</button>
     <div class="hint-text" id="hintText"></div>
@@ -685,11 +813,12 @@
 <script>
 (function(){
   const TARGET = 247; // 2 (Orion) - 4 (Pleiades) - 7 (Scorpius), circle-walk order
-  const TOLERANCE = 2;
+  const TOLERANCE = 0; // must be exactly 247, no leeway
 
   const skyWrap = document.getElementById('skyWrap');
   const rig = document.getElementById('rig');
-  const dial = document.getElementById('dial');
+  const pointerEl = document.getElementById('pointer');
+  const dialBase = document.getElementById('dialBase');
   const dialFace = document.getElementById('dialFace');
   const degValue = document.getElementById('degValue');
   const statusText = document.getElementById('statusText');
@@ -707,7 +836,10 @@
   const popStars = document.getElementById('popStars');
   const popText = document.getElementById('popText');
   const popClose = document.getElementById('popClose');
+  const preciseInput = document.getElementById('preciseInput');
+  const setBtn = document.getElementById('setBtn');
 
+  const starMeta = []; // {el, ang, x%, y%}
   document.querySelectorAll('.fixed-star').forEach(el=>{
     const ang = parseFloat(getComputedStyle(el).getPropertyValue('--ang'));
     const rad = (ang - 90) * Math.PI/180;
@@ -717,7 +849,11 @@
     el.style.left = x + '%';
     el.style.top = y + '%';
     el.style.transform = 'translate(-50%,-50%)';
+    starMeta.push({ el, ang, x, y });
   });
+
+  const beamLine = document.getElementById('beamLine');
+  const RESONANCE_WINDOW = 6; // degrees within a star before it glows
 
   for(let d=0; d<360; d+=10){
     const tick = document.createElement('div');
@@ -760,20 +896,39 @@
   }
 
   function updateReadout(){
-    dial.style.transform = `rotate(${currentAngle}deg)`;
+    pointerEl.style.transform = `rotate(${currentAngle}deg)`;
     const bearing = Math.round(norm(currentAngle));
     degValue.innerHTML = String(bearing).padStart(3,'0') + '<span class="deg-suffix">°</span>';
-    dial.classList.remove('locked-correct','locked-wrong');
+    preciseInput.value = bearing;
+    dialBase.classList.remove('locked-correct','locked-wrong');
     statusText.classList.remove('wrong-text','correct-text');
     if(!solved){
-      statusText.textContent = 'Drag the stone, or nudge with ± , then commit.';
+      statusText.textContent = 'Drag the stone, type an exact bearing, or nudge with ± — then commit.';
+    }
+
+    // resonance glow + beam: purely visual feedback that the needle is swinging
+    // near a carved star — does not reveal which bearing is correct.
+    let nearest = null, nearestDiff = 999;
+    starMeta.forEach(s=>{
+      const diff = Math.min(Math.abs(bearing - s.ang), 360 - Math.abs(bearing - s.ang));
+      s.el.classList.remove('resonate');
+      if(diff < nearestDiff){ nearestDiff = diff; nearest = s; }
+    });
+    if(nearest && nearestDiff <= RESONANCE_WINDOW){
+      nearest.el.classList.add('resonate');
+      beamLine.setAttribute('x2', nearest.x + '%');
+      beamLine.setAttribute('y2', nearest.y + '%');
+      beamLine.classList.add('show');
+    } else {
+      beamLine.classList.remove('show');
     }
   }
 
   function onDown(e){
     if(solved) return;
     dragging = true;
-    dial.style.cursor = 'grabbing';
+    pointerEl.classList.add('dragging');
+    pointerEl.style.cursor = 'grabbing';
     const p = ('touches' in e) ? e.touches[0] : e;
     startPointerAngle = pointerAngleFromCenter(p.clientX, p.clientY);
     startDialAngle = currentAngle;
@@ -790,18 +945,32 @@
   }
   function onUp(){
     dragging = false;
-    dial.style.cursor = 'grab';
+    pointerEl.classList.remove('dragging');
+    pointerEl.style.cursor = 'grab';
   }
 
-  dial.addEventListener('mousedown', onDown);
+  pointerEl.addEventListener('mousedown', onDown);
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onUp);
-  dial.addEventListener('touchstart', onDown, {passive:false});
+  pointerEl.addEventListener('touchstart', onDown, {passive:false});
   window.addEventListener('touchmove', onMove, {passive:false});
   window.addEventListener('touchend', onUp);
 
   nudgeMinus.addEventListener('click', ()=>{ if(solved) return; currentAngle -= 1; updateReadout(); });
   nudgePlus.addEventListener('click', ()=>{ if(solved) return; currentAngle += 1; updateReadout(); });
+
+  function applyPreciseInput(){
+    if(solved) return;
+    let v = parseInt(preciseInput.value, 10);
+    if(isNaN(v)) return;
+    v = Math.max(0, Math.min(359, v));
+    currentAngle = v;
+    updateReadout();
+  }
+  setBtn.addEventListener('click', applyPreciseInput);
+  preciseInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') applyPreciseInput();
+  });
 
   const wrongLines = [
     "The stone shifts with a heavy groan — but nothing opens.",
@@ -817,7 +986,7 @@
 
     if(diff <= TOLERANCE){
       solved = true;
-      dial.classList.add('locked-correct');
+      dialBase.classList.add('locked-correct');
       statusText.classList.add('correct-text');
       statusText.textContent = 'The needle holds true on the middle star. The stone yields.';
       revealBtn.disabled = true;
@@ -825,7 +994,7 @@
     } else {
       attempts += 1;
       attemptCount.textContent = attempts;
-      dial.classList.add('locked-wrong');
+      dialBase.classList.add('locked-wrong');
       statusText.classList.add('wrong-text');
       const line = wrongLines[Math.min(attempts-1, wrongLines.length-1)];
       statusText.textContent = line;
@@ -834,7 +1003,7 @@
       crackFx.classList.remove('show'); void crackFx.offsetWidth; crackFx.classList.add('show');
 
       setTimeout(()=>{
-        dial.classList.remove('locked-wrong');
+        dialBase.classList.remove('locked-wrong');
         statusText.classList.remove('wrong-text');
         if(!solved) statusText.textContent = 'Adjust the bearing and try again.';
       }, 1400);
@@ -843,13 +1012,12 @@
 
   closeBtn.addEventListener('click', ()=> overlay.classList.remove('show'));
 
-  // ===== progressive hint ladder (no number given away until the last tier) =====
   const hints = [
     { level: "Hint 1", text: "Alex's note from the Waterfall Cave might be worth another look — especially the part about the carvings." },
     { level: "Hint 2", text: "Not every star cut into those stones is the same. Some are deep grooves. Some are barely scratches. Try tracing them." },
     { level: "Hint 3", text: "Only count the deep, clear stars on each stone — ignore the shallow ones. They're just wear and decoration." },
     { level: "Hint 4", text: "Count the deep stars on each stone in the order you'd walk past them toward the center: Orion, then the Pleiades, then Scorpius. Line up those three counts as one number." },
-    { level: "Hint 5 — Answer", text: "Orion has 2 deep stars. The Pleiades stone has 4. Scorpius has 7. Together: 247° — the bearing the center stone needs. Turn to it, then press Reveal." }
+    { level: "Hint 5 — Answer", text: "Orion has 2 deep stars. The Pleiades stone has 4. Scorpius has 7. Together: 247° — the exact bearing the center stone needs. Turn to it, then press Reveal." }
   ];
   let hintIndex = -1;
 
@@ -865,7 +1033,6 @@
     hintBtn.textContent = (hintIndex >= hints.length - 1) ? 'Hide hint' : 'Another hint?';
   });
 
-  // ===== constellation key popups =====
   const constData = {
     orion: {
       title: "Orion",
